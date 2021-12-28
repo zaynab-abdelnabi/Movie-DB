@@ -10,25 +10,25 @@ const movies = [
 ]
 
 app.get('/test' , (req, res) => {
-    res.send({status:200,message:"Ok"})
+    res.status(200).status(200).send({status:200,message:"Ok"})
 })
 
 app.get('/time' , (req, res) => {
     let date = new Date();
-    res.send({status:200,message:`${date.getHours()}:${date.getMinutes()}`})
+    res.status(200).send({status:200,message:`${date.getHours()}:${date.getMinutes()}`})
 })
 
 
 app.get(['/hello', '/hello/:id'] , (req, res) => {
-    res.send({status:200,message:`Hello, ${req.params.id || "Unknown"}`})
+    res.status(200).send({status:200,message:`Hello, ${req.params.id || "Unknown"}`})
 })
 
 app.get('/search' , (req, res) => {
     if(req.query.s){
-        res.send({status:200, message:"ok", data:`${req.query.s}`})
+        res.status(200).send({status:200, message:"ok", data:`${req.query.s}`})
     }
     else{
-        res.send({status:500, error:true, message:"you have to provide a search"} )
+        res.status(500).send({status:500, error:true, message:"you have to provide a search"} )
     }
 })
 
@@ -37,32 +37,32 @@ app.get('/movies/create' , (req, res) => {
 })
 
 app.get('/movies/read' , (req, res) => {
-    res.send({status:200, data: movies})
+    res.status(200).send({status:200, data: movies})
 })
 
 app.get('/movies/read/by-date' , (req, res) => {
-    res.send({status:200, data: movies.sort((a,b) => b.year - a.year)})
+    res.status(200).send({status:200, data: movies.sort((a,b) => b.year - a.year)})
 })
 
 app.get('/movies/read/by-rating' , (req, res) => {
-    res.send({status:200, data: movies.sort((a,b) => b.rating - a.rating)})
+    res.status(200).send({status:200, data: movies.sort((a,b) => b.rating - a.rating)})
 })
 
 app.get('/movies/read/by-title' , (req, res) => {
-    res.send({status:200, data: movies.sort((a,b) => a.title.localeCompare(b.title))})
+    res.status(200).send({status:200, data: movies.sort((a,b) => a.title.localeCompare(b.title))})
 })
 
 app.get(['/movies/read/id/:id','/movies/read/id/' ], (req, res) => {
     if(req.params.id){
         if(Number(req.params.id) >= 0 && req.params.id < movies.length){
-            res.send({status:200, data: movies[req.params.id]})
+            res.status(200).send({status:200, data: movies[req.params.id]})
         }
         else{
-            res.send({status:404, error:true, message:`The movie ${req.params.id} does not exist`})
+            res.status(404).send({status:404, error:true, message:`The movie ${req.params.id} does not exist`})
         }
     }
     else{
-        res.send({status:500, error:true, message:`Enter the id of the movie`})
+        res.status(404).send({status:404, error:true, message:`Enter the id of the movie`})
     }
 })
 
@@ -75,7 +75,7 @@ app.get('/movies/delete' , (req, res) => {
 })
 
 app.get("/", (req, res) => {
-  res.send('Ok')
+  res.status(200).send('Ok')
 })
 
 app.listen(port, () => {
