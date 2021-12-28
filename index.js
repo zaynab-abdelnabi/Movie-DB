@@ -11,7 +11,21 @@ app.get('/time' , (req, res) => {
     res.send({status:200,message:`${date.getHours()}:${date.getMinutes()}`})
 })
 
-app.get(/\//, (req, res) => {
+
+app.get(['/hello', '/hello/:id'] , (req, res) => {
+    res.send({status:200,message:`Hello, ${req.params.id || "Unknown"}`})
+})
+
+app.get('/search' , (req, res) => {
+    if(req.query.s){
+        res.send({status:200, message:"ok", data:`${req.query.s}`})
+    }
+    else{
+        res.send({status:500, error:true, message:"you have to provide a search"} )
+    }
+})
+
+app.get("/", (req, res) => {
   res.send('Ok')
 })
 
