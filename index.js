@@ -33,7 +33,53 @@ app.get('/search' , (req, res) => {
 })
 
 app.get('/movies/create' , (req, res) => {
-    res.send()
+
+    if(!req.query.title){
+        if(!req.query.year){
+            res.status(403).send({status:403, error:true, message:'you cannot create a movie without providing a title and a year'})
+        }
+        else{
+            res.status(403).send({status:403, error:true, message:'you cannot create a movie without providing a title'})
+        }
+    }
+    
+    else if(!req.query.year) {
+        res.status(403).send({status:403, error:true, message:'you cannot create a movie without providing a year'})
+    }
+    
+    else if(req.query.year.length != 4 || isNaN(req.query.year)){
+        if(isNaN(req.query.year)){
+            res.status(403).send({status:403, error:true, message:'The year provided is not a number'})
+        }
+        else{
+            res.status(403).send({status:403, error:true, message:'The year provided is not of 4 digits'})
+        }
+    }
+
+    else if(req.query.year > new Date().getFullYear() || req.query.year < 1895 ){
+        res.status(403).send({status:403, error:true, message:'The year provided is not valid'})
+    }
+    
+    else if(!req.query.rating || req.query.rating > 10 || req.query.rating < 0){
+        let newMovie = {
+            title: req.query.title,
+            year: req.query.year,
+            rating: 4
+        }
+        movies.push(newMovie);
+        res.status(200).send({status:200, data: movies})
+    }
+    
+    else {
+        let newMovie = {
+            title: req.query.title,
+            year: req.query.year,
+            rating: req.query.rating
+        }
+        movies.push(newMovie);
+        res.status(200).send({status:200, data: movies})
+    }
+    
 })
 
 app.get('/movies/read' , (req, res) => {
