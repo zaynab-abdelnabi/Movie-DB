@@ -32,7 +32,7 @@ app.get('/search' , (req, res) => {
     }
 })
 
-app.get('/movies/create' , (req, res) => {
+app.post('/movies/create' , (req, res) => {
 
     if(!req.query.title){
         if(!req.query.year){
@@ -106,7 +106,7 @@ app.get(['/movies/read/id/:id','/movies/read/id/' ], (req, res) => {
     }
 })
 
-app.get(['/movies/update', '/movies/update/:id'] , (req, res) => {
+app.put(['/movies/update', '/movies/update/:id'] , (req, res) => {
 
     if(req.params.id){
         
@@ -148,7 +148,7 @@ app.get(['/movies/update', '/movies/update/:id'] , (req, res) => {
 
 })
 
-app.get(['/movies/delete/:id','/movies/delete' ] , (req, res) => {
+app.delete(['/movies/delete/:id','/movies/delete' ] , (req, res) => {
     if(req.params.id){
 
         if(Number(req.params.id) >= 0 && req.params.id < movies.length){
