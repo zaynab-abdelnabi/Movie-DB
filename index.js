@@ -3,8 +3,9 @@ const app = express()
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 
-const port = 3000
-const URI = 'mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false'
+require('dotenv').config()
+
+const port = 3000 
 
 // Mongoose
 
@@ -16,7 +17,7 @@ const movieSchema = new mongoose.Schema({
 
 const Movie = mongoose.model("Movie", movieSchema);
 
-mongoose.connect(URI, {useNewUrlParser:true}, err => {
+mongoose.connect(`${process.env.DB_URL}`, {useNewUrlParser:true}, err => {
     if (err) throw err;
     console.log("connected successfully");
 })
@@ -27,7 +28,7 @@ Movie.create({
     rating: 8
 })
 .then()
-.catch(err => res.status(422).send(err));
+.catch(err => console.log(err));
 
 Movie.create({
     title: "Avatar",
@@ -35,7 +36,7 @@ Movie.create({
     rating: 7.8
 })
 .then()
-.catch(err => res.status(422).send(err));
+.catch(err => console.log(err));
 
 Movie.create({
     title: "Brazil",
@@ -43,7 +44,7 @@ Movie.create({
     rating: 8
 })
 .then()
-.catch(err => res.status(422).send(err));
+.catch(err => err => console.log(err));
 
 Movie.create({
     title: 'الإرهاب والكباب',
@@ -51,7 +52,7 @@ Movie.create({
     rating: 6.2
 })
 .then()
-.catch(err => res.status(422).send(err));
+.catch(err => err => console.log(err));
 
 
 app.get('/test' , (req, res) => {
