@@ -37,6 +37,24 @@ mongoose.connect(`${process.env.DB_URL}`, {useNewUrlParser:true}, err => {
     console.log("connected successfully");
 })
 
+const IsAuth = ( username , password ) => {
+    let acceptPass = false;
+    let acceptUsername = false;
+    if(!username || !password) return -2;
+    for(let i=0 ; i < users.length-1 ; i++){
+        if( username === users[i].username ){
+            acceptUsername = true
+            if( password === users[i].password ) {
+                acceptPass = true
+            }
+            break;
+        }      
+    }
+    if(acceptPass && acceptUsername) return 0;
+    if(acceptUsername) return 1;
+    return -1;
+ }
+
 /*
 Movie.create({
     title: "Jaws",
@@ -96,49 +114,59 @@ app.get('/search' , (req, res) => {
 })
 
 app.post('/movies/create' , (req, res) => {
-
-    if(!req.query.title){
-        if(!req.query.year){
-            res.status(403).send({status:403, error:true, message:'you cannot create a movie without providing a title and a year'})
+    let authStatus = IsAuth(req.query.username, req.query.password)
+    if( authStatus === -2) {
+        res.status(500).send({status:500, error:true, message:`Enter a username and password`})
+    }
+    else if( authStatus === -1 ) {
+        res.status(500).send({status:500, error:true, message:`unexist username`})
+    }
+    else if( authStatus === 1 ) {
+        res.status(500).send({status:500, error:true, message:`Password doesn't match the user`})
+    }
+    else if( authStatus === 0 ) {
+        if(!req.query.title){
+            if(!req.query.year){
+                res.status(403).send({status:403, error:true, message:'you cannot create a movie without providing a title and a year'})
+            }
+            else{
+                res.status(403).send({status:403, error:true, message:'you cannot create a movie without providing a title'})
+            }
         }
-        else{
-            res.status(403).send({status:403, error:true, message:'you cannot create a movie without providing a title'})
+        
+        else if(!req.query.year) {
+            res.status(403).send({status:403, error:true, message:'you cannot create a movie without providing a year'})
+        }
+        
+        else if(req.query.year.length != 4 || isNaN(req.query.year)){
+            if(isNaN(req.query.year)){
+                res.status(403).send({status:403, error:true, message:'The year provided is not a number'})
+            }
+            else{
+                res.status(403).send({status:403, error:true, message:'The year provided is not of 4 digits'})
+            }
+        }
+    
+        else if(req.query.year > new Date().getFullYear() || req.query.year < 1895 ){
+            res.status(403).send({status:403, error:true, message:'The year provided is not valid'})
+        }
+        
+        else if(req.query.rating && (req.query.rating > 10 || req.query.rating < 0) ){
+            res.status(403).send({status:403, error:true, message:'The rating provided is not valid'})
+        }
+        
+        else {
+            Movie.create({
+                title: req.query.title,
+                year: req.query.year,
+                rating: `${req.query.rating || 4}`
+            })
+            .then(movie => {
+                res.status(200).send({status:200, data: movie})
+            })
+            .catch(err => res.status(422).send(err));
         }
     }
-    
-    else if(!req.query.year) {
-        res.status(403).send({status:403, error:true, message:'you cannot create a movie without providing a year'})
-    }
-    
-    else if(req.query.year.length != 4 || isNaN(req.query.year)){
-        if(isNaN(req.query.year)){
-            res.status(403).send({status:403, error:true, message:'The year provided is not a number'})
-        }
-        else{
-            res.status(403).send({status:403, error:true, message:'The year provided is not of 4 digits'})
-        }
-    }
-
-    else if(req.query.year > new Date().getFullYear() || req.query.year < 1895 ){
-        res.status(403).send({status:403, error:true, message:'The year provided is not valid'})
-    }
-    
-    else if(req.query.rating && (req.query.rating > 10 || req.query.rating < 0) ){
-        res.status(403).send({status:403, error:true, message:'The rating provided is not valid'})
-    }
-    
-    else {
-        Movie.create({
-            title: req.query.title,
-            year: req.query.year,
-            rating: `${req.query.rating || 4}`
-        })
-        .then(movie => {
-            res.status(200).send({status:200, data: movie})
-        })
-        .catch(err => res.status(422).send(err));
-    }
-    
 })
 
 app.get('/movies/read' , (req, res) => {
@@ -198,87 +226,108 @@ app.get(['/movies/read/id/:id','/movies/read/id/'], (req, res) => {
 })
 
 app.put(['/movies/update', '/movies/update/:id'] , (req, res) => {
+    let authStatus = IsAuth(req.query.username, req.query.password)
+    if( authStatus === -2) {
+        res.status(500).send({status:500, error:true, message:`Enter a username and password`})
+    }
+    else if( authStatus === -1 ) {
+        res.status(500).send({status:500, error:true, message:`unexist username`})
+    }
+    else if( authStatus === 1 ) {
+        res.status(500).send({status:500, error:true, message:`Password doesn't match the user`})
+    }
+    else if( authStatus === 0) {
+        if(req.params.id){
 
-    if(req.params.id){
-
-        let id = req.params.id;
-
-        if(!req.query.title && !req.query.year && !req.query.rating){
-            res.status(404).send({status:404, error:true, message:`Enter the data you want to update`})
-        }
-
-        else if(req.query.year && ( req.query.year > new Date().getFullYear() || req.query.year < 1895 || req.query.year.length != 4 || isNaN(req.query.year) )){
-            res.status(403).send({status:403, error:true, message:'The year provided is not valid'})
-        }
-        
-        else if(req.query.rating && (isNaN(req.query.rating) || req.query.rating >10 || req.query.rating < 0)){
-            res.status(403).send({status:403, error:true, message:'The rating provided is not valid'})
-        }
-
-        else{
-
-            Movie.findById(id)
-            .then(movie => {
-
-                Movie.findOneAndReplace({_id: id}, {
-                    title : `${req.query.title || movie.title}`,
-                    year : `${req.query.year || movie.year}`,
-                    rating : `${req.query.rating || movie.rating}`
-                })
-
-                    .then(updatedMovie => {
-                        if(!updatedMovie) return res.status(404).send();
-                        
-                        Movie.find()
-                            .then(movies =>{
-                                res.status(200).send({status:200, data: movies})
-                            })
-                            .catch(err => {
-                                res.status(422).send(err);
-                            })
-
-                    })
-
-                    .catch(err => {
-                        res.status(422).send(err);
-                    })
-
-            })
-            .catch(err => {
-                res.status(404).send({status:404, error:true, message:`The movie ${req.params.id} does not exist`})
-            })
+            let id = req.params.id;
+    
+            if(!req.query.title && !req.query.year && !req.query.rating){
+                res.status(404).send({status:404, error:true, message:`Enter the data you want to update`})
+            }
+    
+            else if(req.query.year && ( req.query.year > new Date().getFullYear() || req.query.year < 1895 || req.query.year.length != 4 || isNaN(req.query.year) )){
+                res.status(403).send({status:403, error:true, message:'The year provided is not valid'})
+            }
             
+            else if(req.query.rating && (isNaN(req.query.rating) || req.query.rating >10 || req.query.rating < 0)){
+                res.status(403).send({status:403, error:true, message:'The rating provided is not valid'})
+            }
+    
+            else{
+    
+                Movie.findById(id)
+                .then(movie => {
+    
+                    Movie.findOneAndReplace({_id: id}, {
+                        title : `${req.query.title || movie.title}`,
+                        year : `${req.query.year || movie.year}`,
+                        rating : `${req.query.rating || movie.rating}`
+                    })
+    
+                        .then(updatedMovie => {
+                            if(!updatedMovie) return res.status(404).send();
+                            
+                            Movie.find()
+                                .then(movies =>{
+                                    res.status(200).send({status:200, data: movies})
+                                })
+                                .catch(err => {
+                                    res.status(422).send(err);
+                                })
+    
+                        })
+    
+                        .catch(err => {
+                            res.status(422).send(err);
+                        })
+    
+                })
+                .catch(err => {
+                    res.status(404).send({status:404, error:true, message:`The movie ${req.params.id} does not exist`})
+                })
+                
+            }
+        }
+    
+        else{
+            res.status(404).send({status:404, error:true, message:`Enter the id of the movie`})
         }
     }
-
-    else{
-        res.status(404).send({status:404, error:true, message:`Enter the id of the movie`})
-    }
-
 })
 
 app.delete(['/movies/delete/:id','/movies/delete'] , (req, res) => {
-    if(req.params.id){
-        Movie.findOneAndDelete({_id: req.params.id})
-            .then(deletedMovie => {
-                if(!deletedMovie) return res.status(404).send({status:404, error:true, message:`The movie ${req.params.id} does not exist`});
-                Movie.find()
-                    .then(movies => {
-                        res.status(200).send({status:200, data: movies})
-                    })
-                    .catch(err => {
-                        res.status(422).send(err);
-                    })
-            })
-            .catch(err => {
-                res.status(422).send(err);
-            })
+    let authStatus = IsAuth(req.query.username, req.query.password)
+    if( authStatus === -2) {
+        res.status(500).send({status:500, error:true, message:`Enter a username and password`})
     }
-
-    else{
-        res.status(404).send({status:404, error:true, message:`Enter the id of the movie`})
+    else if( authStatus === -1 ) {
+        res.status(500).send({status:500, error:true, message:`unexist username`})
     }
-
+    else if( authStatus === 1 ) {
+        res.status(500).send({status:500, error:true, message:`Password doesn't match the user`})
+    }
+    else if( authStatus === 0 ) {
+        if(req.params.id){
+            Movie.findOneAndDelete({_id: req.params.id})
+                .then(deletedMovie => {
+                    if(!deletedMovie) return res.status(404).send({status:404, error:true, message:`The movie ${req.params.id} does not exist`});
+                    Movie.find()
+                        .then(movies => {
+                            res.status(200).send({status:200, data: movies})
+                        })
+                        .catch(err => {
+                            res.status(422).send(err);
+                        })
+                })
+                .catch(err => {
+                    res.status(422).send(err);
+                })
+        }
+    
+        else{
+            res.status(404).send({status:404, error:true, message:`Enter the id of the movie`})
+        }
+    }
 })
 
 // User CRUD app
